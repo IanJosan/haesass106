@@ -14,6 +14,19 @@
         <el-table v-loading="loading" :data="list" border>
           <el-table-column label="序号" type="index" sortable="" />
           <el-table-column label="姓名" prop="username" sortable="" />
+          <el-table-column>
+            <template slot-scope="{row}">
+              <img
+                slot="reference"
+                v-imagerror="require('@/assets/common/bigUserHeader.png')"
+                :src="row.staffPhoto "
+                style="border-radius: 50%; width: 100px; height: 100px; padding: 10px"
+                alt=""
+                @click="showQrCode(row.staffPhoto)"
+              >
+
+            </template>
+          </el-table-column>
           <el-table-column label="工号" prop="workNumber" sortable="" />
           <el-table-column label="手机号" prop="mobile" sortable="" />
           <el-table-column label="聘用形式" prop="formOfEmployment" sortable="" :formatter="formatEmployment" />
@@ -35,7 +48,7 @@
               <el-button type="text" size="small">转正</el-button>
               <el-button type="text" size="small">调岗</el-button>
               <el-button type="text" size="small">离职</el-button>
-              <el-button type="text" size="small">角色</el-button>
+              <el-button type="text" size="small" @click="editRole(row.id)">角色</el-button>
               <el-button type="text" size="small" @click="delEmployee(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -53,19 +66,27 @@
       </el-card>
     </div>
     <addEmployee :show-dialog.sync="showDialog" />
+    <el-dialog title="二维码" :user-id="userId" :visible.sync="showCodeDialog">
+      <el-row>
+        <canvas ref="myCanvas" />
+      </el-row>
+    </el-dialog>
+    <assignRoleVue ref="assignRole" :show-role-dialog.sync="showRoleDialog" />
   </div>
 </template>
 
 <script>
 import { getEmployeeList, delEmployee } from '@/api/employees'
-
+import assignRoleVue from './components/assign-role.vue'
 import EmployeeEnum from '@/api/constant/employees'
 import addEmployee from './components/add-employee.vue'
 import { formatDate } from '@/filters'
+import QrCode from 'qrcode'
 //  <!-- 格式化聘用形式 -->
 export default {
   components: {
-    addEmployee
+    addEmployee,
+    assignRoleVue
   },
   data() {
     return {
@@ -76,8 +97,10 @@ export default {
         total: 0
       },
       loading: false,
-      showDialog: false
-
+      showDialog: false,
+      showCodeDialog: false,
+      showRoleDialog: false,
+      userId: null
     }
   },
   created() {
@@ -156,6 +179,21 @@ export default {
       })
       // return rows.map(item => Object.keys(headers).map(key => item[headers[key]]))
       // 需要处理时间格式问题
+    },
+    showQrCode(url) {
+      if (url) {
+        this.showCodeDialog = true
+        this.$nextTick(() => {
+          QrCode.toCanvas(this.$refs.myCanvas, url)
+        })
+      } else {
+        this.$message.warning('未上传')
+      }
+    },
+    async editRole(id) {
+      this.showRoleDialog = true
+      await this.$refs.assignRole.getUserDetailById(id)
+      this.userId = id
     }
   }
 }

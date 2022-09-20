@@ -17,7 +17,7 @@ import '@/icons' // icon
 import '@/permission' // permission control
 
 import * as filters from '@/filters'
-
+import checkPermission from '@/mixin/checkPermission'
 import Component from '@/components'
 Vue.use(Component) // 注册自己的插件
 // set ElementUI lang to EN
@@ -30,6 +30,7 @@ Object.keys(directives).forEach(key => {
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key]) // 注册过滤器
 })
+Vue.mixin(checkPermission)
 Vue.config.productionTip = false
 
 new Vue({
